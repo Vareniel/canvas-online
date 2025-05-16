@@ -33,7 +33,7 @@
   <script>
     const canvas = document.getElementById('board');
     const ctx = canvas.getContext('2d');
-    const socket = io('http://localhost:3000'); // ganti ke backend URL jika online
+    const socket = io('https://canvas-backend-production.up.railway.app'); // ganti ke backend URL jika online
 
     let drawing = false;
     let tool = 'pencil'; // or 'eraser'
