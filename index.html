@@ -30,42 +30,67 @@
   <canvas id="board" width="800" height="500"></canvas>
 
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-  <script>
-    const canvas = document.getElementById('board');
-    const ctx = canvas.getContext('2d');
-    const socket = io('https://canvas-backend-production.up.railway.app'); // ganti ke backend URL jika online
+<script>
+  const canvas = document.getElementById('board');
+  const ctx = canvas.getContext('2d');
+  const socket = io('https://canvas-backend-production.up.railway.app'); // ganti dengan domain backend kamu
 
-    let drawing = false;
-    let tool = 'pencil'; // or 'eraser'
+  let drawing = false;
+  let tool = 'pencil'; // or 'eraser'
 
-    canvas.addEventListener('mousedown', () => drawing = true);
-    canvas.addEventListener('mouseup', () => drawing = false);
-    canvas.addEventListener('mouseout', () => drawing = false);
+  // Mouse Events
+  canvas.addEventListener('mousedown', () => drawing = true);
+  canvas.addEventListener('mouseup', () => drawing = false);
+  canvas.addEventListener('mouseout', () => drawing = false);
 
-    canvas.addEventListener('mousemove', (e) => {
-      if (!drawing) return;
-      const x = e.offsetX;
-      const y = e.offsetY;
-      const color = (tool === 'pencil') ? '#000000' : '#FFFFFF';
+  canvas.addEventListener('mousemove', (e) => {
+    if (!drawing) return;
+    handleDraw(e.offsetX, e.offsetY);
+  });
 
-      draw(x, y, color);
-      socket.emit('draw', { x, y, color });
-    });
+  // Touch Events
+  canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    drawing = true;
+  }, { passive: false });
 
-    socket.on('draw', ({ x, y, color }) => {
-      draw(x, y, color);
-    });
+  canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    drawing = false;
+  }, { passive: false });
 
-    function draw(x, y, color) {
-      ctx.fillStyle = color;
-      ctx.beginPath();
-      ctx.arc(x, y, 3, 0, Math.PI * 2);
-      ctx.fill();
-    }
+  canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (!drawing) return;
 
-    // Tool selector
-    document.getElementById('pencilBtn').onclick = () => tool = 'pencil';
-    document.getElementById('eraserBtn').onclick = () => tool = 'eraser';
-  </script>
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    handleDraw(x, y);
+  }, { passive: false });
+
+  function handleDraw(x, y) {
+    const color = (tool === 'pencil') ? '#000000' : '#FFFFFF';
+    draw(x, y, color);
+    socket.emit('draw', { x, y, color });
+  }
+
+  socket.on('draw', ({ x, y, color }) => {
+    draw(x, y, color);
+  });
+
+  function draw(x, y, color) {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Tool selector
+  document.getElementById('pencilBtn').onclick = () => tool = 'pencil';
+  document.getElementById('eraserBtn').onclick = () => tool = 'eraser';
+</script>
+
 </body>
 </html>
