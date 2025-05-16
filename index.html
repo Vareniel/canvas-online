@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Realtime Drawing</title>
+  <style>
+    canvas {
+      border: 1px solid #aaa;
+      display: block;
+      margin: 20px auto;
+      cursor: crosshair;
+    }
+    .tools {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    button {
+      margin: 0 5px;
+      padding: 5px 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2 style="text-align:center">🖊️ Realtime Drawing with Pencil & Eraser</h2>
+  <div class="tools">
+    <button id="pencilBtn">Pencil</button>
+    <button id="eraserBtn">Eraser</button>
+  </div>
+  <canvas id="board" width="800" height="500"></canvas>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    const canvas = document.getElementById('board');
+    const ctx = canvas.getContext('2d');
+    const socket = io('http://localhost:3000'); // ganti ke backend URL jika online
+
+    let drawing = false;
+    let tool = 'pencil'; // or 'eraser'
+
+    canvas.addEventListener('mousedown', () => drawing = true);
+    canvas.addEventListener('mouseup', () => drawing = false);
+    canvas.addEventListener('mouseout', () => drawing = false);
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (!drawing) return;
+      const x = e.offsetX;
+      const y = e.offsetY;
+      const color = (tool === 'pencil') ? '#000000' : '#FFFFFF';
+
+      draw(x, y, color);
+      socket.emit('draw', { x, y, color });
+    });
+
+    socket.on('draw', ({ x, y, color }) => {
+      draw(x, y, color);
+    });
+
+    function draw(x, y, color) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Tool selector
+    document.getElementById('pencilBtn').onclick = () => tool = 'pencil';
+    document.getElementById('eraserBtn').onclick = () => tool = 'eraser';
+  </script>
+</body>
+</html>
